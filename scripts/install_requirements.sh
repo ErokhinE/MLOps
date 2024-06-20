@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VENV_DIR=".venv"
+VENV_DIR="venv"
 
 # Activate the virtual environment based on the OS
 if [[ "$OSTYPE" == "msys" ]]; then

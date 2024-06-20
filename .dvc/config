@@ -1,0 +1,4 @@
+[core]
+    remote = localstore
+['remote "localstore"']
+    url = C:\Users\danil\Desktop\try_2\MLOps/datastore
