@@ -3,7 +3,7 @@ import hydra
 from omegaconf import DictConfig
 import os
 
-@hydra.main(config_path="../configs", config_name="config")
+@hydra.main(version_base=None, config_path="../configs", config_name="config")
 def sample_data(cfg: DictConfig):
     data_url = cfg.data.url
     sample_size = cfg.data.sample_size
