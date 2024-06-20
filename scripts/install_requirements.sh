@@ -1,26 +1,21 @@
 #!/bin/bash
 
-# Define the virtual environment directory
-VENV_DIR="venv"
+VENV_DIR=".venv"
 
-# Create the virtual environment if it doesn't exist
-if [ ! -d "$VENV_DIR" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv $VENV_DIR
+# Activate the virtual environment based on the OS
+if [[ "$OSTYPE" == "msys" ]]; then
+    # Windows
+    source $VENV_DIR/Scripts/activate
+else
+    # Unix-like systems
+    source $VENV_DIR/bin/activate
 fi
 
-# Activate the virtual environment
-source $VENV_DIR/bin/activate
-
-# Upgrade pip
-echo "Upgrading pip..."
-pip install --upgrade pip
-
 # Install the requirements
-echo "Installing requirements..."
-pip install -r requirements.txt
-
-echo "All requirements installed successfully."
-
-# Deactivate the virtual environment
-deactivate
+if [ -f "requirements.txt" ]; then
+    echo "Installing requirements..."
+    pip install -r requirements.txt
+    echo "All requirements installed successfully."
+else
+    echo "requirements.txt not found."
+fi
