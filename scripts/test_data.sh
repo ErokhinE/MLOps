@@ -27,7 +27,7 @@ if [ $TEST_STATUS -eq 0 ]; then
 
     # Add the versioned sample file to DVC and commit
     dvc add $SAMPLE_FILE
-    git add $SAMPLE_FILE.dvc
+    git add .
     git commit -m "Versioned data sample: $SAMPLE_FILE"
     dvc push
 else
