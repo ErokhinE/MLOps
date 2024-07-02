@@ -1,0 +1,5 @@
+data:
+  url: data/car_prices.csv
+  sample_size: 0.2
+  sample_file: data/samples/sample.csv
+  data_version: 1.0
