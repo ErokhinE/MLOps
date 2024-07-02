@@ -33,7 +33,8 @@ if [ $TEST_STATUS -eq 0 ]; then
     git tag -a "v$DATA_VERSION" -m "add data version v$DATA_VERSION"
     git push --tags
     dvc push
-    python change_config.py
+    PYTHONCONFIGPATH="$PWD/scripts"
+    python $PYTHONCONFIGPATH/change_config.py
 else
     echo "Tests failed. Data sample will not be versioned."
     exit 1
