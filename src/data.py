@@ -2,6 +2,11 @@ import pandas as pd
 import hydra
 from omegaconf import DictConfig
 import os
+from great_expectations.data_context import FileDataContext
+from pathlib import Path
+from hydra import compose, initialize
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+import scipy.stats as stats
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def sample_data(cfg: DictConfig):
@@ -16,7 +21,7 @@ def sample_data(cfg: DictConfig):
     # Sample the data
     start = int((version - 1)*(sample_size*len(df)))
     end = int(version*(sample_size*len(df)))
-    if version == 5.0:
+    if version >= 5.0:
         end = len(df)
     sample_df = df.iloc[start:end]
 
@@ -26,6 +31,173 @@ def sample_data(cfg: DictConfig):
     # Save the sampled data
     sample_df.to_csv(sample_file, index=False)
     print(f"Sampled data saved to {sample_file}")
+    return sample_df
+
+
+def validate_initial_data():
+    context = FileDataContext(project_root_dir='services')
+    sample_source = context.sources.add_or_update_pandas('data_sample')
+    sample_asset = sample_source.add_csv_asset(name='data_sample_asset', filepath_or_buffer='data/samples/sample.csv')
+    batch_request = sample_asset.build_batch_request()
+    batches = sample_asset.get_batch_list_from_batch_request(batch_request)
+    
+    # Create expectations suite
+    context.add_or_update_expectation_suite('expectation_suite')
+    
+    # Create validator
+    validator = context.get_validator(
+        batch_request=batch_request,
+        expectation_suite_name='expectation_suite',
+    )
+    
+    validator.expect_column_values_to_not_be_null(column="sellingprice",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="year",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="vin",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="mmr",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="odometer",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="body",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="condition",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="color",mostly=0.95)
+
+    validator.expect_column_values_to_be_unique(column='vin',mostly=0.95)
+    validator.expect_column_value_lengths_to_equal(column='vin',value=17,mostly=0.95)
+
+    validator.expect_column_values_to_match_regex(column='year',regex='[0-9]{4}$')
+
+    validator.expect_column_values_to_be_between(column='sellingprice', min_value=100, max_value=200000,mostly=0.95)
+
+    validator.expect_column_values_to_be_between(column='mmr', min_value=50, max_value=190000,mostly=0.95)
+
+    validator.expect_column_values_to_be_between(column='condition', min_value=0, max_value=50,mostly=0.95)
+
+
+
+
+
+    validator.expect_column_values_to_be_of_type(
+        column='sellingprice',
+        type_='float64'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='body',
+        type_='str'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='year',
+        type_='int64'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='vin',
+        type_='str'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='condition',
+        type_='float64'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='odometer',
+        type_='float64'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='mmr',
+        type_='float64'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='color',
+        type_='str'
+    )
+    
+    # Store expectation suite
+    validator.save_expectation_suite(
+        discard_failed_expectations = False
+    )
+    
+    # Create checkpoint
+    checkpoint = context.add_or_update_checkpoint(
+        name="checkpoint",
+        validator=validator,
+    )
+    
+    # Run validation
+    checkpoint_result = checkpoint.run()
+    return checkpoint_result.success
+
+
+def read_datastore() -> tuple[pd.DataFrame, str]:
+    """
+    Read sample and return in dataframe format to ZenML pipeline
+
+    Returns:
+        pd.DataFrame: data sample
+        str: version number of sample
+    """
+    # Initialize Hydra with config path (replace with your config file)
+    initialize(config_path="../configs", version_base="1.1")
+    cfg = compose(config_name="config")
+    version_num = cfg.data.data_version
+    print(version_num)
+    sample_path = Path("data") / "samples" / "sample.csv"
+    df = pd.read_csv(sample_path)
+    return df, version_num
+
+
+
+def preprocess_data(df):
+    df['trim'] = df['trim'].fillna('other')
+    df['color'] = df['color'].fillna('other')
+    df['make'] = df['make'].fillna('other')
+    df['model'] = df['model'].fillna('other')
+
+
+    # Fill missing values with mode
+    df['body'] = df['body'].fillna(df['body'].mode()[0])
+    df['interior'] = df['interior'].fillna(df['interior'].mode()[0])
+    df['transmission'] = df['transmission'].fillna(df['transmission'].mode()[0])
+
+    # Remove null values
+    df.dropna(subset=['vin'], inplace=True)
+    df.dropna(subset=['saledate'], inplace=True)
+    df['condition'] = df['condition'].fillna(df['condition'].median())
+    df['odometer'] = df['odometer'].fillna(df['odometer'].mean())
+    df['mmr'] = df['mmr'].fillna(df['mmr'].mean())
+    numerical_columns = df.select_dtypes(include=['float64', 'int64']).columns
+    z_scores = stats.zscore(df[numerical_columns])
+    clean_df = df[(z_scores < 2).all(axis=1)]
+    clean_df.drop(columns=['saledate'], inplace=True)
+    normalized_df = df.copy()
+
+    # Numerical columns to be normalized
+    numerical_cols = ['condition', 'odometer', 'mmr']
+
+    # Categorical columns to be encoded
+    categorical_cols = [col for col in df.columns if col not in numerical_cols and col != 'sellingprice']
+
+    # Normalize numerical features using Min-Max Scaling
+    scaler_dict = {}
+    for col in numerical_cols:
+        scaler = MinMaxScaler()
+        normalized_df[col] = scaler.fit_transform(df[[col]])
+        scaler_dict[col] = scaler
+
+    # Encode categorical features using Label Encoding
+    label_encoders = {}
+    for col in categorical_cols:
+        le = LabelEncoder()
+        normalized_df[col] = le.fit_transform(df[col])
+        label_encoders[col] = le
+    X, y = normalized_df.drop(['sellingprice', 'vin']), normalized_df[['vin']]
+    return X, y
+
+
 
 if __name__ == "__main__":
-    sample_data()
+    #sample_data()
+    #validate_initial_data()
+    df, version = read_datastore()
+    print(df.head(5))
