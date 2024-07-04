@@ -7,6 +7,8 @@ from pathlib import Path
 from hydra import compose, initialize
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 import scipy.stats as stats
+import great_expectations as gx
+import zenml
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def sample_data(cfg: DictConfig):
@@ -191,13 +193,119 @@ def preprocess_data(df):
         le = LabelEncoder()
         normalized_df[col] = le.fit_transform(df[col])
         label_encoders[col] = le
-    X, y = normalized_df.drop(['sellingprice', 'vin']), normalized_df[['vin']]
+    X, y = normalized_df.drop(['sellingprice', 'vin'],axis=1), normalized_df[['sellingprice']]
     return X, y
 
 
 
+def validate_features(car_prices_dataframe_tuple):
+    
+    context = gx.get_context()
+    ds = context.sources.add_or_update_pandas(name = "transformed_data")
+    da = ds.add_dataframe_asset(name = "pandas_dataframe")
+    batch_request = da.build_batch_request(dataframe = car_prices_dataframe_tuple[0])
+
+    # Create expectations suite
+    context.add_or_update_expectation_suite('transformed_data_expectation')
+    
+    # Create validator for X
+    validator = context.get_validator(
+        batch_request=batch_request,
+        expectation_suite_name='transformed_data_expectation',
+    )
+
+    validator.expect_column_values_to_not_be_null("year")
+    # Expect column values to be of type int
+    validator.expect_column_values_to_be_of_type(
+        column='year',
+        type_='int'
+    )
+
+    # Expect column values to be of type str
+    validator.expect_column_values_to_be_of_type(
+        column='make',
+        type_='int'
+    )
+
+    # Expect column values to be of type bool
+    validator.expect_column_values_to_be_of_type(
+        column='model',
+        type_='int'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='trim',
+        type_='int'
+    )
+
+    validator.expect_column_values_to_be_of_type(
+        column='body',
+        type_='int'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='transmission',
+        type_='int'
+    )
+    
+
+    validator.expect_column_values_to_be_of_type(
+        column='state',
+        type_='int'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='condition',
+        type_='int'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='odometer',
+        type_='int'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='color',
+        type_='int'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='interior',
+        type_='int'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='seller',
+        type_='int'
+    )
+    validator.expect_column_values_to_be_of_type(
+        column='mmr',
+        type_='int'
+    )
+    
+
+    # Store expectation suite
+    validator.save_expectation_suite(
+        discard_failed_expectations = False
+    )
+    
+    # Create checkpoint
+    checkpoint = context.add_or_update_checkpoint(
+        name="checkpoint",
+        validator=validator,
+    )
+    
+    # Run validation
+    checkpoint_result = checkpoint.run()
+
+
+    if checkpoint_result.success:
+        return car_prices_dataframe_tuple
+    
+def load_features(X, y, ver):
+    zenml.save_artifact(data = X, name = "features", tags = [ver])
+    zenml.save_artifact(data = y, name = "target", tags = [ver])
+
+
+
 if __name__ == "__main__":
-    #sample_data()
-    #validate_initial_data()
+    sample_data()
+    # validate_initial_data()
     df, version = read_datastore()
+    tuple_features_target = preprocess_data(df)
+    validate_features(tuple_features_target)
     print(df.head(5))
