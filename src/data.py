@@ -115,31 +115,23 @@ def validate_initial_data():
         type_='str'
     )
     
-    # Store expectation suite
+    
     validator.save_expectation_suite(
         discard_failed_expectations = False
     )
     
-    # Create checkpoint
+    
     checkpoint = context.add_or_update_checkpoint(
         name="checkpoint",
         validator=validator,
     )
     
-    # Run validation
+    
     checkpoint_result = checkpoint.run()
     return checkpoint_result.success
 
 
 def read_datastore() -> tuple[pd.DataFrame, str]:
-    """
-    Read sample and return in dataframe format to ZenML pipeline
-
-    Returns:
-        pd.DataFrame: data sample
-        str: version number of sample
-    """
-    # Initialize Hydra with config path (replace with your config file)
     initialize(config_path="../configs", version_base="1.1")
     cfg = compose(config_name="config")
     version_num = cfg.data.data_version
@@ -204,30 +196,25 @@ def validate_features(car_prices_dataframe_tuple):
     ds = context.sources.add_or_update_pandas(name = "transformed_data")
     da = ds.add_dataframe_asset(name = "pandas_dataframe")
     batch_request = da.build_batch_request(dataframe = car_prices_dataframe_tuple[0])
-
-    # Create expectations suite
     context.add_or_update_expectation_suite('transformed_data_expectation')
-    
-    # Create validator for X
     validator = context.get_validator(
         batch_request=batch_request,
         expectation_suite_name='transformed_data_expectation',
     )
-
     validator.expect_column_values_to_not_be_null("year")
-    # Expect column values to be of type int
+    
     validator.expect_column_values_to_be_of_type(
         column='year',
         type_='int'
     )
 
-    # Expect column values to be of type str
+    
     validator.expect_column_values_to_be_of_type(
         column='make',
         type_='int'
     )
 
-    # Expect column values to be of type bool
+    
     validator.expect_column_values_to_be_of_type(
         column='model',
         type_='int'
@@ -277,19 +264,17 @@ def validate_features(car_prices_dataframe_tuple):
         type_='int'
     )
     
-
-    # Store expectation suite
     validator.save_expectation_suite(
         discard_failed_expectations = False
     )
     
-    # Create checkpoint
+    
     checkpoint = context.add_or_update_checkpoint(
         name="checkpoint",
         validator=validator,
     )
     
-    # Run validation
+    
     checkpoint_result = checkpoint.run()
 
 
