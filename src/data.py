@@ -3,6 +3,10 @@ import hydra
 from omegaconf import DictConfig
 import os
 from great_expectations.data_context import FileDataContext
+from pathlib import Path
+from hydra import compose, initialize
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+import scipy.stats as stats
 
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def sample_data(cfg: DictConfig):
@@ -125,8 +129,75 @@ def validate_initial_data():
     return checkpoint_result.success
 
 
+def read_datastore() -> tuple[pd.DataFrame, str]:
+    """
+    Read sample and return in dataframe format to ZenML pipeline
+
+    Returns:
+        pd.DataFrame: data sample
+        str: version number of sample
+    """
+    # Initialize Hydra with config path (replace with your config file)
+    initialize(config_path="../configs", version_base="1.1")
+    cfg = compose(config_name="config")
+    version_num = cfg.data.data_version
+    print(version_num)
+    sample_path = Path("data") / "samples" / "sample.csv"
+    df = pd.read_csv(sample_path)
+    return df, version_num
+
+
+
+def preprocess_data(df):
+    df['trim'] = df['trim'].fillna('other')
+    df['color'] = df['color'].fillna('other')
+    df['make'] = df['make'].fillna('other')
+    df['model'] = df['model'].fillna('other')
+
+
+    # Fill missing values with mode
+    df['body'] = df['body'].fillna(df['body'].mode()[0])
+    df['interior'] = df['interior'].fillna(df['interior'].mode()[0])
+    df['transmission'] = df['transmission'].fillna(df['transmission'].mode()[0])
+
+    # Remove null values
+    df.dropna(subset=['vin'], inplace=True)
+    df.dropna(subset=['saledate'], inplace=True)
+    df['condition'] = df['condition'].fillna(df['condition'].median())
+    df['odometer'] = df['odometer'].fillna(df['odometer'].mean())
+    df['mmr'] = df['mmr'].fillna(df['mmr'].mean())
+    numerical_columns = df.select_dtypes(include=['float64', 'int64']).columns
+    z_scores = stats.zscore(df[numerical_columns])
+    clean_df = df[(z_scores < 2).all(axis=1)]
+    clean_df.drop(columns=['saledate'], inplace=True)
+    normalized_df = df.copy()
+
+    # Numerical columns to be normalized
+    numerical_cols = ['condition', 'odometer', 'mmr']
+
+    # Categorical columns to be encoded
+    categorical_cols = [col for col in df.columns if col not in numerical_cols and col != 'sellingprice']
+
+    # Normalize numerical features using Min-Max Scaling
+    scaler_dict = {}
+    for col in numerical_cols:
+        scaler = MinMaxScaler()
+        normalized_df[col] = scaler.fit_transform(df[[col]])
+        scaler_dict[col] = scaler
+
+    # Encode categorical features using Label Encoding
+    label_encoders = {}
+    for col in categorical_cols:
+        le = LabelEncoder()
+        normalized_df[col] = le.fit_transform(df[col])
+        label_encoders[col] = le
+    X, y = normalized_df.drop(['sellingprice', 'vin']), normalized_df[['vin']]
+    return X, y
+
 
 
 if __name__ == "__main__":
-    sample_data()
-    validate_initial_data()
+    #sample_data()
+    #validate_initial_data()
+    df, version = read_datastore()
+    print(df.head(5))
