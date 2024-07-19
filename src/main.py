@@ -6,7 +6,7 @@ import mlflow
 
 from model import load_features, train, log_metadata
 
-mlflow.set_tracking_uri(uri='http://192.168.164.14:8080')
+mlflow.set_tracking_uri(uri='http://192.168.164.14:5000')
 
 
 def run(args):

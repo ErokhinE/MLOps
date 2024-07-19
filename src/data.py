@@ -201,6 +201,7 @@ def validate_features(car_prices_dataframe_tuple):
     context = gx.get_context()
     ds = context.sources.add_or_update_pandas(name = "transformed_data")
     da = ds.add_dataframe_asset(name = "pandas_dataframe")
+    print(car_prices_dataframe_tuple[0].info())
     batch_request = da.build_batch_request(dataframe = car_prices_dataframe_tuple[0])
     context.add_or_update_expectation_suite('transformed_data_expectation')
     validator = context.get_validator(
@@ -211,63 +212,63 @@ def validate_features(car_prices_dataframe_tuple):
     
     validator.expect_column_values_to_be_of_type(
         column='year',
-        type_='int'
+        type_='int64'
     )
 
     
     validator.expect_column_values_to_be_of_type(
         column='make',
-        type_='int'
+        type_='int64'
     )
 
     
     validator.expect_column_values_to_be_of_type(
         column='model',
-        type_='int'
+        type_='int64'
     )
 
     validator.expect_column_values_to_be_of_type(
         column='trim',
-        type_='int'
+        type_='int64'
     )
 
     validator.expect_column_values_to_be_of_type(
         column='body',
-        type_='int'
+        type_='int64'
     )
     validator.expect_column_values_to_be_of_type(
         column='transmission',
-        type_='int'
+        type_='int64'
     )
     
 
     validator.expect_column_values_to_be_of_type(
         column='state',
-        type_='int'
+        type_='int64'
     )
     validator.expect_column_values_to_be_of_type(
         column='condition',
-        type_='int'
+        type_='float64'
     )
     validator.expect_column_values_to_be_of_type(
         column='odometer',
-        type_='int'
+        type_='float64'
     )
     validator.expect_column_values_to_be_of_type(
         column='color',
-        type_='int'
+        type_='int64'
     )
     validator.expect_column_values_to_be_of_type(
         column='interior',
-        type_='int'
+        type_='int64'
     )
     validator.expect_column_values_to_be_of_type(
         column='seller',
-        type_='int'
+        type_='int64'
     )
     validator.expect_column_values_to_be_of_type(
         column='mmr',
-        type_='int'
+        type_='float64'
     )
     
     validator.save_expectation_suite(
@@ -292,11 +293,18 @@ def load_features(X, y, ver):
     zenml.save_artifact(data = y, name = "target", tags = [ver])
 
 
+def extract_data(version, cfg):
+    data_path = cfg.data.data_paths[version]
+    df = pd.read_csv(data_path)
+    return df, version
+
+
+def init_hydra():
+    hydra.initialize(config_path="conf")
+    cfg = hydra.compose(config_name="config")
+    return cfg
+
 
 if __name__ == "__main__":
     sample_data()
-    # validate_initial_data()
-    df, version = read_datastore()
-    tuple_features_target = preprocess_data(df)
-    validate_features(tuple_features_target)
-    print(df.head(5))
+

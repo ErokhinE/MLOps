@@ -7,23 +7,27 @@ from airflow.operators.bash import BashOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 
 
-with DAG(dag_id="prepare_data",
-         start_date=datetime(2024, 6, 29, tz="UTC"),
-         schedule="*/30 * * * *",
-         max_active_runs = 1,
+with DAG(dag_id="data_preparation",
+         start_date=datetime(2024, 7, 4, tz="UTC"),
+         schedule_interval="*/5 * * * *",
+         max_active_runs=1,
          catchup=False) as dag:
     
-    sensor = ExternalTaskSensor(
-        task_id='wait_for_data_extract',
-        external_dag_id='extract_data',
+    wait_for_extract_sensor = ExternalTaskSensor(
+        task_id='await_data_extraction',
+        external_dag_id='data_extraction',
         execution_delta=timedelta(hours=0),
+        timeout=700,                       # Timeout in seconds
+        allowed_states=['success'],        # Allowed states of the external task
+        failed_states=['failed'],
+        mode='poke',
         dag=dag,
     )
 
-    data_prepare_command = "python /mnt/c/Users/danil/Desktop/try_2/MLOps/services/airflow/dags/data_prepare.py "
-    data_prepare = BashOperator(
-        task_id= 'version_data',
-        bash_command=f"{data_prepare_command}"
+    prepare_data_command = "python /mnt/c/Users/danil/Desktop/try_2/MLOps/services/airflow/dags/data_prepare.py"
+    prepare_data_task = BashOperator(
+        task_id='prepare_data_task',
+        bash_command=f"{prepare_data_command}"
     )
 
-    sensor >> data_prepare
+    wait_for_extract_sensor >> prepare_data_task
