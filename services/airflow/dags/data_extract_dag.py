@@ -12,8 +12,8 @@ from data import sample_data, validate_initial_data
 dag_args = {
     'dag_id': 'extract_data',
     'start_date': pdt(2024, 7, 4, tz="UTC"),
-    'schedule_interval': '*/10 * * * *',
-    'catchup': False
+    'schedule_interval': '*/30 * * * *',
+    'catchup': False,
 }
 
 # Instantiate the DAG
@@ -24,7 +24,6 @@ with DAG(**dag_args) as dag:
         path = os.getcwd()
         os.chdir("/mnt/c/Users/danil/Desktop/try_2/MLOps")
         data_sample = sample_data()
-        print("Ya gay 3000")
         os.chdir(path)
         if data_sample is None:
             raise AirflowException("Data sampling failed")

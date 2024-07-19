@@ -140,7 +140,7 @@ def read_datastore() -> tuple[pd.DataFrame, str]:
     cfg = compose(config_name="config")
     version_num = cfg.data.data_version
     print(version_num)
-    sample_path = Path("data") / "samples" / "sample.csv"
+    sample_path = Path("/mnt/c/Users/danil/Desktop/try_2/MLOps/data") / "samples" / "sample.csv"
     df = pd.read_csv(sample_path)
     return df, version_num
 
@@ -154,6 +154,8 @@ def preprocess_data(df):
 
 
     # Fill missing values with mode
+    print(df.shape)
+    print('---------------------------------------------------------')
     df['body'] = df['body'].fillna(df['body'].mode()[0])
     df['interior'] = df['interior'].fillna(df['interior'].mode()[0])
     df['transmission'] = df['transmission'].fillna(df['transmission'].mode()[0])
