@@ -16,7 +16,7 @@ feast
 pendulum
 shyaml
 mlflow
-giskard
+giskard==2.14.0
 evidently
 Flask
 flask-session2

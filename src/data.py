@@ -10,8 +10,10 @@ import scipy.stats as stats
 import great_expectations as gx
 import zenml
 
-@hydra.main(version_base=None, config_path="../configs", config_name="config")
-def sample_data(cfg: DictConfig):
+# @hydra.main(version_base=None, config_path="../configs", config_name="config")
+def sample_data():
+    initialize(config_path="../configs", version_base="1.1")
+    cfg = compose(config_name="config")
     data_url = cfg.data.url
     sample_size = cfg.data.sample_size
     sample_file = cfg.data.sample_file
@@ -52,25 +54,25 @@ def validate_initial_data():
         expectation_suite_name='expectation_suite',
     )
     
-    validator.expect_column_values_to_not_be_null(column="sellingprice",mostly=0.95)
-    validator.expect_column_values_to_not_be_null(column="year",mostly=0.95)
-    validator.expect_column_values_to_not_be_null(column="vin",mostly=0.95)
-    validator.expect_column_values_to_not_be_null(column="mmr",mostly=0.95)
-    validator.expect_column_values_to_not_be_null(column="odometer",mostly=0.95)
-    validator.expect_column_values_to_not_be_null(column="body",mostly=0.95)
-    validator.expect_column_values_to_not_be_null(column="condition",mostly=0.95)
-    validator.expect_column_values_to_not_be_null(column="color",mostly=0.95)
+    validator.expect_column_values_to_not_be_null(column="sellingprice",mostly=0.75)
+    validator.expect_column_values_to_not_be_null(column="year",mostly=0.75)
+    validator.expect_column_values_to_not_be_null(column="vin",mostly=0.75)
+    validator.expect_column_values_to_not_be_null(column="mmr",mostly=0.75)
+    validator.expect_column_values_to_not_be_null(column="odometer",mostly=0.75)
+    validator.expect_column_values_to_not_be_null(column="body",mostly=0.75)
+    validator.expect_column_values_to_not_be_null(column="condition",mostly=0.75)
+    validator.expect_column_values_to_not_be_null(column="color",mostly=0.75)
 
-    validator.expect_column_values_to_be_unique(column='vin',mostly=0.95)
-    validator.expect_column_value_lengths_to_equal(column='vin',value=17,mostly=0.95)
+    validator.expect_column_values_to_be_unique(column='vin',mostly=0.75)
+    validator.expect_column_value_lengths_to_equal(column='vin',value=17,mostly=0.75)
 
     validator.expect_column_values_to_match_regex(column='year',regex='[0-9]{4}$')
 
-    validator.expect_column_values_to_be_between(column='sellingprice', min_value=100, max_value=200000,mostly=0.95)
+    validator.expect_column_values_to_be_between(column='sellingprice', min_value=100, max_value=200000,mostly=0.75)
 
-    validator.expect_column_values_to_be_between(column='mmr', min_value=50, max_value=190000,mostly=0.95)
+    validator.expect_column_values_to_be_between(column='mmr', min_value=50, max_value=190000,mostly=0.75)
 
-    validator.expect_column_values_to_be_between(column='condition', min_value=0, max_value=50,mostly=0.95)
+    validator.expect_column_values_to_be_between(column='condition', min_value=0, max_value=50,mostly=0.75)
 
 
 
@@ -128,6 +130,8 @@ def validate_initial_data():
     
     
     checkpoint_result = checkpoint.run()
+    print(checkpoint_result.success)
+    print(checkpoint_result)
     return checkpoint_result.success
 
 

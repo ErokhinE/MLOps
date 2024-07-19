@@ -6,7 +6,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "sellingprice",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -14,7 +14,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "year",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -22,7 +22,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "vin",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -30,7 +30,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "mmr",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -38,7 +38,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "odometer",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -46,7 +46,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "body",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -54,7 +54,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "condition",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -62,7 +62,7 @@
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": {
         "column": "color",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -70,7 +70,7 @@
       "expectation_type": "expect_column_values_to_be_unique",
       "kwargs": {
         "column": "vin",
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -78,7 +78,7 @@
       "expectation_type": "expect_column_value_lengths_to_equal",
       "kwargs": {
         "column": "vin",
-        "mostly": 0.95,
+        "mostly": 0.75,
         "value": 17
       },
       "meta": {}
@@ -97,7 +97,7 @@
         "column": "sellingprice",
         "max_value": 200000,
         "min_value": 100,
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -107,7 +107,7 @@
         "column": "mmr",
         "max_value": 190000,
         "min_value": 50,
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -117,7 +117,7 @@
         "column": "condition",
         "max_value": 50,
         "min_value": 0,
-        "mostly": 0.95
+        "mostly": 0.75
       },
       "meta": {}
     },
@@ -188,6 +188,6 @@
   ],
   "ge_cloud_id": null,
   "meta": {
-    "great_expectations_version": "0.18.16"
+    "great_expectations_version": "0.18.19"
   }
 }

@@ -1,0 +1,13 @@
+defaults:
+  - _self_
+  - config
+  - data_version
+  - model
+  # - experiment
+  # - data
+
+hydra:
+  mode: MULTIRUN
+  sweeper:
+    params:
+      +model: "random_forest"

@@ -1,0 +1,44 @@
+[2024-07-19 01:31:10 +0300] [8022] [INFO] Starting gunicorn 22.0.0
+[2024-07-19 01:31:10 +0300] [8022] [ERROR] Connection in use: ('::', 8793)
+[2024-07-19 01:31:10 +0300] [8022] [ERROR] Retrying in 1 second.
+[2024-07-19 01:31:11 +0300] [8022] [ERROR] Connection in use: ('::', 8793)
+[2024-07-19 01:31:11 +0300] [8022] [ERROR] Retrying in 1 second.
+[2024-07-19 01:31:12 +0300] [8022] [ERROR] Connection in use: ('::', 8793)
+[2024-07-19 01:31:12 +0300] [8022] [ERROR] Retrying in 1 second.
+[2024-07-19 01:31:13 +0300] [8022] [ERROR] Connection in use: ('::', 8793)
+[2024-07-19 01:31:13 +0300] [8022] [ERROR] Retrying in 1 second.
+[2024-07-19 01:31:14 +0300] [8022] [ERROR] Connection in use: ('::', 8793)
+[2024-07-19 01:31:14 +0300] [8022] [ERROR] Retrying in 1 second.
+[2024-07-19 01:31:15 +0300] [8022] [ERROR] Can't connect to ('::', 8793)
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
+Terminating on signal 15
