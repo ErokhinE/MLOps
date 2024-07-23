@@ -2,12 +2,10 @@ defaults:
   - _self_
   - config
   - data_version
-  - model
-  # - experiment
-  # - data
+  - model/model
 
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      +model: "random_forest"
+      +model: "random_forest, gradient_boosting"

@@ -16,8 +16,10 @@ feast
 pendulum
 shyaml
 mlflow
-giskard==2.14.0
+# giskard==2.14.0
 evidently
 Flask
 flask-session2
 psycopg2-binary
+shap
+matplotlib

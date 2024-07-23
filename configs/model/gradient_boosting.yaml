@@ -1,0 +1,39 @@
+defaults:
+  - _self_
+
+model_name: gradient_boosting_regressor
+
+artifact_path: basic_gb_regressor
+
+tag_key: "model"
+tag_value: "basic gradient_boostig"
+
+module_name: "sklearn.ensemble"
+class_name: "GradientBoostingRegressor"
+
+folds: 3
+
+evaluation_metric: "neg_root_mean_squared_error"
+cv_evaluation_metric: "neg_mean_absolute_error" 
+
+pyfunc_predict_fn: "predict"
+
+params:
+    n_estimators:
+      - 100
+      - 200
+      - 300
+    learning_rate:
+      - 0.01
+      - 0.1
+      - 0.2
+    max_depth:
+      - null
+      - 5
+      - 7
+
+metrics:
+  rmse: "neg_root_mean_squared_error"
+  mae: "neg_mean_absolute_error"
+  r2: "r2"
+  mape: "neg_mean_absolute_percentage_error"

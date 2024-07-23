@@ -1,0 +1,38 @@
+defaults:
+  - _self_
+
+model_name: random_forest_regressor
+artifact_path: basic_random_forest_regressor
+
+tag_key: "model"
+tag_value: "basic random_forest_regressor"
+
+module_name: "sklearn.ensemble"
+class_name: "RandomForestRegressor"
+
+folds: 3
+
+evaluation_metric: "neg_root_mean_squared_error"
+cv_evaluation_metric: "neg_mean_absolute_error" 
+
+pyfunc_predict_fn: "predict"
+
+params:
+    n_estimators:
+      - 100
+      - 200
+      - 300
+    max_depth:
+      - 20
+      - 30
+      - null
+    max_features:
+      - null
+      - 'sqrt'
+      - 'log2'
+
+metrics:
+  rmse: "neg_root_mean_squared_error"
+  mae: "neg_mean_absolute_error"
+  r2: "r2"
+  mape: "neg_mean_absolute_percentage_error"

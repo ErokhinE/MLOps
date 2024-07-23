@@ -3,10 +3,11 @@ from typing_extensions import Tuple, Annotated
 from zenml import step, pipeline, ArtifactConfig
 import os
 import sys
-sys.path.append(os.path.abspath('/mnt/c/Users/danil/Desktop/try_2/MLOps'))
+PROJECT_PATH = os.environ['PROJECT_DIR']
+sys.path.append(os.path.abspath(PROJECT_PATH))
 from src.data import read_datastore, preprocess_data, validate_features, load_features
 
-os.chdir('/mnt/c/Users/danil/Desktop/try_2/MLOps')
+os.chdir(PROJECT_PATH)
 
 
 @step(enable_cache=False)

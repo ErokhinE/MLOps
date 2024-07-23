@@ -1,6 +1,6 @@
 {
     "type": "zenml.zen_server.deploy.local.local_zen_server.LocalZenServer",
-    "uuid": "da665a64-3704-4565-aae1-13cbcd66d658",
+    "uuid": "bb271247-472f-4d40-838d-69b8628fcbec",
     "admin_state": "active",
     "config": {
         "type": "zenml.zen_server.deploy.local.local_zen_server.LocalZenServerConfig",
@@ -12,13 +12,13 @@
         "model_version": "",
         "service_name": "zenml-local",
         "silent_daemon": false,
-        "root_runtime_path": "/mnt/c/Users/danil/Desktop/try_2/MLOps/services/zenml/zen_server/local",
+        "root_runtime_path": "/home/tanel/MLOps/services/zenml/zen_server/local",
         "singleton": true,
         "blocking": false,
         "server": {
             "name": "local",
             "provider": "local",
-            "port": 8237,
+            "port": 2718,
             "ip_address": "127.0.0.1",
             "blocking": false,
             "store": null,
@@ -30,7 +30,7 @@
         "state": "pending_startup",
         "last_state": "inactive",
         "last_error": "",
-        "runtime_path": "/mnt/c/Users/danil/Desktop/try_2/MLOps/services/zenml/zen_server/local",
+        "runtime_path": "/home/tanel/MLOps/services/zenml/zen_server/local",
         "silent_daemon": false
     },
     "endpoint": {
@@ -41,7 +41,7 @@
             "name": "LocalDaemonServiceEndpoint",
             "description": "",
             "protocol": "http",
-            "port": 8237,
+            "port": 2718,
             "ip_address": "127.0.0.1",
             "allocate_port": false
         },
@@ -52,7 +52,7 @@
             "last_error": "",
             "protocol": "http",
             "hostname": "127.0.0.1",
-            "port": 8237
+            "port": 2718
         },
         "monitor": {
             "type": "zenml.services.service_monitor.HTTPEndpointHealthMonitor",

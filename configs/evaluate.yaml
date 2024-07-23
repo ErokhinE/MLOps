@@ -1,0 +1,11 @@
+data_version: 1
+model_alias: champion
+
+defaults:
+  - _self_
+
+hydra:
+  mode: MULTIRUN
+  sweeper:
+    params:
+      +model_name: "random_forest_regressor, gradient_boosting_regressor"

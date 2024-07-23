@@ -5,7 +5,7 @@ from pendulum import datetime as pdt
 import os
 from data import sample_data, validate_initial_data
 
-
+PROJECT_PATH = os.environ['PROJECT_DIR']
 
 
 # Define DAG parameters
@@ -22,7 +22,7 @@ with DAG(**dag_args) as dag:
     # Task to sample data
     def task_sample_data():
         original_path = os.getcwd()
-        os.chdir("/mnt/c/Users/danil/Desktop/try_2/MLOps")
+        os.chdir(PROJECT_PATH)
         sampled_data = sample_data()
         os.chdir(original_path)
         if sampled_data is None:
@@ -47,8 +47,8 @@ with DAG(**dag_args) as dag:
     )
 
     # Define the bash command for versioning data
-    os.chdir("/mnt/c/Users/danil/Desktop/try_2/MLOps")
-    versioning_script = "/mnt/c/Users/danil/Desktop/try_2/MLOps/scripts/versioning_sample.sh"
+    os.chdir(PROJECT_PATH)
+    versioning_script = f"{PROJECT_PATH}/scripts/versioning_sample.sh"
     if not os.path.exists(versioning_script.strip()):
         raise Exception(f"Script {versioning_script} not found")
 
