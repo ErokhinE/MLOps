@@ -1,78 +1,32 @@
-import pandas as pd
-from typing_extensions import Tuple, Annotated
-from zenml import step, pipeline, ArtifactConfig
-from src.data import read_datastore, preprocess_data, validate_features, load_features
+from pendulum import datetime
+from datetime import timedelta
 import os
+from airflow import DAG
+from airflow.decorators import dag
+from airflow.operators.bash import BashOperator
+from airflow.sensors.external_task import ExternalTaskSensor
+PROJECT_PATH = os.environ['PROJECT_DIR']
 
-
-@step(enable_cache=False)
-def extract()-> Tuple[
-                Annotated[pd.DataFrame,
-                        ArtifactConfig(name="extracted_data", 
-                                       tags=["data_preparation"]
-                                       )
-                        ],
-                Annotated[str,
-                        ArtifactConfig(name="data_version",
-                                       tags=["data_preparation"])]
-                    ]:
+with DAG(dag_id="data_preparation",
+         start_date=datetime(2024, 7, 4, tz="UTC"),
+         schedule_interval="*/5 * * * *",
+         max_active_runs=1,
+         catchup=False) as dag:
     
-    df, version = read_datastore()
+    wait_for_extract_sensor = ExternalTaskSensor(
+        task_id='await_data_extraction',
+        external_dag_id='extract_data',
+        execution_delta=timedelta(hours=0),
+        timeout=700,                       # Timeout in seconds
+        allowed_states=['success'],        # Allowed states of the external task
+        failed_states=['failed'],
+        mode='poke',
+        dag=dag,
+    )
+    prepare_data_command = f"python {PROJECT_PATH}/services/airflow/dags/data_prepare.py"
+    prepare_data_task = BashOperator(
+        task_id='prepare_data_task',
+        bash_command=f"{prepare_data_command}"
+    )
 
-    return df, str(version)
-
-@step(enable_cache=False)
-def transform(df: pd.DataFrame)-> Tuple[
-                    Annotated[pd.DataFrame, 
-                            ArtifactConfig(name="input_features",
-                                           tags=["data_preparation"])],
-                    Annotated[pd.DataFrame,
-                            ArtifactConfig(name="input_target", 
-                                            tags=["data_preparation"])]
-                                    ]:
-
-    # Your data transformation code
-    X, y = preprocess_data(df)
-
-    return X, y
-
-@step(enable_cache=False)
-def validate(X:pd.DataFrame, 
-             y:pd.DataFrame)->Tuple[
-                    Annotated[pd.DataFrame, 
-                            ArtifactConfig(name="valid_input_features",
-                                           tags=["data_preparation"])],
-                    Annotated[pd.DataFrame,
-                            ArtifactConfig(name="valid_target",
-                                           tags=["data_preparation"])]
-                                    ]:
-
-    X, y = validate_features(X, y)
-    
-    return X, y
-
-
-@step(enable_cache=False)
-def load(X:pd.DataFrame, y:pd.DataFrame, version: str)-> Tuple[
-                    Annotated[pd.DataFrame, 
-                            ArtifactConfig(name="features",
-                                           tags=["data_preparation"])],
-                    Annotated[pd.DataFrame,
-                            ArtifactConfig(name="target",
-                                           tags=["data_preparation"])]
-                                    ]:
-    
-    load_features(X, y, version)
-
-    return X, y
-
-@pipeline()
-def data_prepare_pipeline():
-    df, version = extract()
-    X, y = transform(df)
-    X, y = validate(X, y)
-    X, y = load(X, y, version)
-
-
-if __name__ == "__main__":
-    data_prepare_pipeline()
+    wait_for_extract_sensor >> prepare_data_task

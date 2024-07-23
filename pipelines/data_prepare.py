@@ -1,78 +1,70 @@
 import pandas as pd
 from typing_extensions import Tuple, Annotated
 from zenml import step, pipeline, ArtifactConfig
-from src.data import read_datastore, preprocess_data, validate_features, load_features
 import os
+import sys
+PROJECT_PATH = os.environ['PROJECT_DIR']
+sys.path.append(os.path.abspath(PROJECT_PATH))
+from src.data import read_datastore, preprocess_data, validate_features, load_features
 
-#PROJECT_HOME = os.environ['PROJECT_HOME']
+os.chdir(PROJECT_PATH)
+
 
 @step(enable_cache=False)
-def extract()-> Tuple[
-                Annotated[pd.DataFrame,
-                        ArtifactConfig(name="extracted_data", 
-                                       tags=["data_preparation"]
-                                       )
-                        ],
-                Annotated[str,
-                        ArtifactConfig(name="data_version",
-                                       tags=["data_preparation"])]
-                    ]:
-    
+def data_extraction() -> Tuple[
+    Annotated[
+        pd.DataFrame, ArtifactConfig(name="extracted_data", tags=["data_pipeline"])
+    ],
+    Annotated[str, ArtifactConfig(name="data_version", tags=["data_pipeline"])],
+]:
     df, version = read_datastore()
-
     return df, str(version)
 
 @step(enable_cache=False)
-def transform(df: pd.DataFrame)-> Tuple[
-                    Annotated[pd.DataFrame, 
-                            ArtifactConfig(name="input_features",
-                                           tags=["data_preparation"])],
-                    Annotated[pd.DataFrame,
-                            ArtifactConfig(name="input_target", 
-                                            tags=["data_preparation"])]
-                                    ]:
-
+def data_transformation(
+    df: pd.DataFrame,
+) -> Tuple[
+    Annotated[
+        pd.DataFrame, ArtifactConfig(name="transformed_features", tags=["data_pipeline"])
+    ],
+    Annotated[
+        pd.DataFrame, ArtifactConfig(name="transformed_target", tags=["data_pipeline"])
+    ],
+]:
+    # Your data transformation code
     X, y = preprocess_data(df)
-
     return X, y
 
 @step(enable_cache=False)
-def validate(X:pd.DataFrame, 
-             y:pd.DataFrame)->Tuple[
-                    Annotated[pd.DataFrame, 
-                            ArtifactConfig(name="valid_input_features",
-                                           tags=["data_preparation"])],
-                    Annotated[pd.DataFrame,
-                            ArtifactConfig(name="valid_target",
-                                           tags=["data_preparation"])]
-                                    ]:
-
-    X, y = validate_features(X, y)
-    
+def data_validation(
+    X: pd.DataFrame, y: pd.DataFrame
+) -> Tuple[
+    Annotated[
+        pd.DataFrame,
+        ArtifactConfig(name="validated_features", tags=["data_pipeline"]),
+    ],
+    Annotated[
+        pd.DataFrame, ArtifactConfig(name="validated_target", tags=["data_pipeline"])
+    ],
+]:
+    X, y = validate_features((X, y))
     return X, y
 
-
 @step(enable_cache=False)
-def load(X:pd.DataFrame, y:pd.DataFrame, version: str)-> Tuple[
-                    Annotated[pd.DataFrame, 
-                            ArtifactConfig(name="features",
-                                           tags=["data_preparation"])],
-                    Annotated[pd.DataFrame,
-                            ArtifactConfig(name="target",
-                                           tags=["data_preparation"])]
-                                    ]:
-    
+def data_loading(
+    X: pd.DataFrame, y: pd.DataFrame, version: str
+) -> Annotated[
+    pd.DataFrame, ArtifactConfig(name="final_features_target", tags=["data_pipeline"])
+]:
     load_features(X, y, version)
-
-    return X, y
+    return pd.concat([X, y], axis=1)
 
 @pipeline()
-def data_prepare_pipeline():
-    df, version = extract()
-    X, y = transform(df)
-    X, y = validate(X, y)
-    X, y = load(X, y, version)
-
+def data_pipeline():
+    df, version = data_extraction()
+    X, y = data_transformation(df)
+    X, y = data_validation(X, y)
+    df = data_loading(X, y, version)
 
 if __name__ == "__main__":
-    data_prepare_pipeline()
+    data_pipeline()

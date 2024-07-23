@@ -1,114 +1,87 @@
-from data import extract_data # custom module
-from transform_data import transform_data # custom module
-from model import retrieve_model_with_alias # custom module
-from utils import init_hydra
 import giskard
-import hydra
-import mlflow
+from model import load_features, retrieve_model_with_alias
+from sklearn.metrics import mean_squared_error
+import os
+from mlflow.tracking import MlflowClient
+client = MlflowClient()
+import numpy as np
+import pandas as pd
 
-def prepare_dataset(cfg):
-    version = cfg.data.data_version
-    df, version = extract_data(version=version, cfg=cfg)
-    target = cfg.data.target
-    cat_cols = list(cfg.data.target)
-    data_name = f'{cfg.data.dataset_name}.{cfg.data.version}'
+def choose_best_model():
+    challenger_models = []
+    for model_type in ['random_forest_regressor', 'gradient_boosting_regressor']:
+        for alias in ['challenger1', 'challenger2']:
+            challenger_models.append((retrieve_model_with_alias(model_type, alias), model_type, alias))
+    test_data = load_features('', 2)
+    X, y = test_data
+    df = pd.DataFrame(X)
+    df['sellingprice'] = y
     giskard_dataset = giskard.Dataset(
         df=df,
-        target=target,
-        name=data_name,
-        cat_columns=cat_cols
+        name="test_datasetv2",
+        target="sellingprice"
     )
-    return giskard_dataset, df, version
+    giskard_models = []
+    for model_info in challenger_models:
+        model = giskard.Model(
+            model=model_info[0].predict,  # load_model is a custom function to load your model
+            name=f"{model_info[1]}_{model_info[2]}",
+            model_type='regression',
+            target_name='sellingprice',
+            
+        )
+        giskard_models.append((model,model_info[2], model_info[1]))
+        
+    success_threshold = -1600.0  # Example threshold for F1 score
 
+    results = []
+    # Create test suite and add performance test
+    for giskard_model_info in giskard_models:
+        giskard_model, alias, name = giskard_model_info
+        def passed_the_neg_root_mean_squared_error(model, dataset):
+            y_true, y_pred = dataset.df[dataset.target], model.predict(dataset).raw
+            neg_root_mean_squred_error = -np.sqrt(mean_squared_error(y_true, y_pred))
+            return giskard.TestResult(passed=neg_root_mean_squred_error>=success_threshold)
+        scan_res = giskard.scan(model=giskard_model, dataset=giskard_dataset)
+        report_path = f"reports/report_{giskard_model.name}_test_dataset_v2.html"
+        scan_res.to_html(report_path)
+        suite_name = f"suite_{giskard_model.name}_{giskard_dataset.name}_2"
+        test_suite = giskard.Suite(suite_name)
+        test_suite.add_test(passed_the_neg_root_mean_squared_error, model=giskard_model, dataset=giskard_dataset, test_id='neg_root_mean_squared_error')
+        result = test_suite.run()
+        results.append({
+            "model": giskard_model,
+            "passed": result.passed,
+            "issues": scan_res.issues,
+            "alias": alias,
+            "name": name
+        })
 
-def load_model(model_name, model_alias):
-    client = mlflow.MlflowClient()
-    model = retrieve_model_with_alias(model_name, model_alias=model_alias)
-    model_version = client.get_model_version_by_alias(name=model_name, alias=model_alias).version
-    return model, model_version
+    passing_models = [r for r in results if r["passed"]]
 
+    # Sort by the number of issues (ascending) and other criteria if necessary
+    passing_models_sorted = sorted(passing_models, key=lambda x: len(x['issues']))
 
-def predict(cfg, df, model, version, transformer_version):
-    X = transform_data(
-        df=df,
-        version=version,
-        cfg=cfg,
-        return_df=False,
-        only_transform=True,
-        transformer_version=transformer_version,
-        only_X=True
-    )
-    return model.predict(X)
+    # Select the model with the least issues
+    selected_model = passing_models_sorted[0] if passing_models_sorted else None
+    def find_model_by_version(model_name, model_alias):
+        version = client.get_model_version_by_alias(model_name, model_alias)
+        return version.version
 
-def create_giskard_model(predict_func, model_name, cfg, df):
-    giskard_model = giskard.Model(
-        model=predict_func,
-        model_type="regression",
-        classification_labels=list(cfg.data.labels),
-        feature_names=df.columns,
-        name=model_name
-    )
-    return giskard_model
-
-def run_giskard_scan(giskard_model, giskard_dataset, model_name, model_version, dataset_name, version):
-    scan_results = giskard.scan(giskard_model, giskard_dataset)
-    scan_results_path = f"reports/validation_results_{model_name}_{model_version}_{dataset_name}_{version}.html"
-    scan_results.to_html(scan_results_path)
-    return scan_results_path
-
-def create_and_run_test_suite(giskard_model, giskard_dataset, model_name, model_version, dataset_name, version, threshold):
-    suite_name = f"test_suite_{model_name}_{model_version}_{dataset_name}_{version}"
-    test_suite = giskard.Suite(name=suite_name)
-
-    test1 = giskard.testing.test_f1(model=giskard_model, dataset=giskard_dataset, threshold=threshold)
-    test_suite.add_test(test1)
-    
-    test_results = test_suite.run()
-    return test_results
-
-def select_best_model(cfg, giskard_dataset, df, version):
-    model_names = cfg.model.challenger_model_names
-    model_aliases = ["challenger" + str(i+1) for i in range(len(model_names))]
-    evaluation_metric_threshold = cfg.model.f1_threshold
-    transformer_version = cfg.data_transformer_version
-
-    client = mlflow.MlflowClient()
-    best_model = None
-    least_issues = float('inf')
-
-    for model_name, model_alias in zip(model_names, model_aliases):
-        model, model_version = load_model(model_name, model_alias)
-        predict_func = predict(cfg, df, model, version, transformer_version)
-        giskard_model = create_giskard_model(predict_func, model_name, cfg, df)
-        run_giskard_scan(giskard_model, giskard_dataset, model_name, model_version, giskard_dataset.name, version)
-        test_results = create_and_run_test_suite(giskard_model, giskard_dataset, model_name, model_version, giskard_dataset.name, version, evaluation_metric_threshold)
-
-        if test_results.passed:
-            num_issues = len(test_results.results) - sum([1 for result in test_results.results if result.passed])
-            if num_issues < least_issues:
-                least_issues = num_issues
-                best_model = (model_name, model_version, model_alias)
-
-    return best_model
-
-def tag_and_deploy_best_model(best_model):
-    if best_model:
-        model_name, model_version, model_alias = best_model
-        client = mlflow.MlflowClient()
+    if selected_model:
         client.transition_model_version_stage(
-            name=model_name,
-            version=model_version,
+            name=selected_model['name'],
+            version=find_model_by_version(selected_model['name'], selected_model['alias']),
             stage="Production"
         )
-        print(f"Model {model_name} version {model_version} is tagged as the champion and deployed.")
     else:
-        print("No model found.")
+        print('No best model found')
+
+
 
 def main():
-    cfg = init_hydra()
-    giskard_dataset, df, version = prepare_dataset(cfg)
-    best = select_best_model(cfg, giskard_dataset, df, version)
-    tag_and_deploy_best_model(best)
+    choose_best_model()
 
 if __name__ == '__main__':
     main()
+

@@ -14,7 +14,7 @@ os.makedirs(results_folder, exist_ok=True)
 
 # Get the client
 client = mlflow.tracking.MlflowClient()
-for experiment_id, parent_run_id, model_name in [["431725057885973349", "72830497de52405bb697bc6797d43653", "random_forest_regressor"], ["544441921844855430", "b9fa16659b114559bdfd5807a3399706", "random_forest_regressor"]]:
+for experiment_id, parent_run_id, model_name in [["431725057885973349", "72830497de52405bb697bc6797d43653", "random_forest_regressor"], ["544441921844855430", "b9fa16659b114559bdfd5807a3399706", "gradient_boosting_regressor"]]:
     # Get child runs
     child_runs = client.search_runs(
         experiment_ids=[experiment_id],
