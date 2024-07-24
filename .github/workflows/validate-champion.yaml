@@ -1,4 +1,4 @@
-name: Example testing
+name: Validate champion model
 
 on: 
   push:
@@ -41,8 +41,27 @@ jobs:
           python3.10 -m pip install --upgrade pip 
           pip3.10 install -r requirements.txt 
         
-      - name: validation
+      
+      - name: Export variables
+        run: | 
+          echo $PWD
+          export ZENML_CONFIG_PATH=$PWD/services/zenml
+          export PROJECT_DIR=$PWD >> $GITHUB_ENV
+          export AIRFLOW_HOME=$PWD/services/airflow
+          export PYTHONPATH=$PWD/src
+
+      - name: Run ZenML server  
+        run: zenml down && zenml up
+      - name: Run mlflow
+        run: mlflow server -h 127.0 0.1 -p 5000
+        
+      - name: Test with pytest
         run: |
           echo $PWD
+          export ZENML_CONFIG_PATH=$PWD/services/zenml
           export PROJECT_DIR=$PWD >> $GITHUB_ENV
+          export AIRFLOW_HOME=$PWD/services/airflow
+          export PYTHONPATH=$PWD/src
           python3.10 src/validate_champion.py
+      
+
