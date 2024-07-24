@@ -11,7 +11,7 @@ from zenml.artifacts.utils import load_artifact
 from joblib import Parallel, parallel_backend
 import matplotlib
 
-mlflow.set_tracking_uri(uri='http://127.0 0.1:5000')
+mlflow.set_tracking_uri(uri='http://192.168.164.14:5000')
 
 def load_features(dataset_name, dataset_version, sample_fraction=1):
     dataframe = load_artifact(name_or_id='final_features_target', version=dataset_version)

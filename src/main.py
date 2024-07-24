@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 
 from model import load_features, train, log_metadata
 
-mlflow.set_tracking_uri(uri='http://127.0 0.1:5000')
+mlflow.set_tracking_uri(uri='http://192.168.164.14:5000')
 
 
 def run(args):
