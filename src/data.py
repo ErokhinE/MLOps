@@ -9,14 +9,18 @@ from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 import scipy.stats as stats
 import great_expectations as gx
 import zenml
+import numpy as np
+import pickle
+project_dir = os.environ['PROJECT_DIR']
+
 
 # @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def sample_data():
-    initialize(config_path="../configs", version_base="1.1")
+    initialize(config_path=f"../configs", version_base="1.1")
     cfg = compose(config_name="config")
-    data_url = cfg.data.url
+    data_url = f'{project_dir}/{cfg.data.url}'
     sample_size = cfg.data.sample_size
-    sample_file = cfg.data.sample_file
+    sample_file = f'{project_dir}/{cfg.data.sample_file}'
     version = cfg.data.data_version
 
     # Read the data
@@ -39,9 +43,10 @@ def sample_data():
 
 
 def validate_initial_data():
+    dir_path = os.environ['PROJECT_DIR']
     context = FileDataContext(project_root_dir='services')
     sample_source = context.sources.add_or_update_pandas('data_sample')
-    sample_asset = sample_source.add_csv_asset(name='data_sample_asset', filepath_or_buffer='data/samples/sample.csv')
+    sample_asset = sample_source.add_csv_asset(name='data_sample_asset', filepath_or_buffer=f'{dir_path}/data/samples/sample.csv')
     batch_request = sample_asset.build_batch_request()
     batches = sample_asset.get_batch_list_from_batch_request(batch_request)
     
@@ -140,7 +145,8 @@ def read_datastore() -> tuple[pd.DataFrame, str]:
     cfg = compose(config_name="config")
     version_num = cfg.data.data_version
     print(version_num)
-    sample_path = Path("/mnt/c/Users/danil/Desktop/try_2/MLOps/data") / "samples" / "sample.csv"
+    dir_path = os.environ['PROJECT_DIR']
+    sample_path = Path(f"{dir_path}/data") / "samples" / "sample.csv"
     df = pd.read_csv(sample_path)
     return df, version_num
 
@@ -152,15 +158,10 @@ def preprocess_data(df):
     df['make'] = df['make'].fillna('other')
     df['model'] = df['model'].fillna('other')
 
-
-    # Fill missing values with mode
-    print(df.shape)
-    print('---------------------------------------------------------')
     df['body'] = df['body'].fillna(df['body'].mode()[0])
     df['interior'] = df['interior'].fillna(df['interior'].mode()[0])
     df['transmission'] = df['transmission'].fillna(df['transmission'].mode()[0])
 
-    # Remove null values
     df.dropna(subset=['vin'], inplace=True)
     df.dropna(subset=['saledate'], inplace=True)
     df['condition'] = df['condition'].fillna(df['condition'].median())
@@ -195,13 +196,105 @@ def preprocess_data(df):
     return X, y
 
 
+def fit_transformers(df):
+    df['trim'] = df['trim'].fillna('other')
+    df['color'] = df['color'].fillna('other')
+    df['make'] = df['make'].fillna('other')
+    df['model'] = df['model'].fillna('other')
+    df['body'] = df['body'].fillna(df['body'].mode()[0])
+    df['interior'] = df['interior'].fillna(df['interior'].mode()[0])
+    df['transmission'] = df['transmission'].fillna(df['transmission'].mode()[0])
+    df.dropna(subset=['vin'], inplace=True)
+    df.dropna(subset=['saledate'], inplace=True)
+    df['condition'] = df['condition'].fillna(df['condition'].median())
+    df['odometer'] = df['odometer'].fillna(df['odometer'].mean())
+    df['mmr'] = df['mmr'].fillna(df['mmr'].mean())
+    numerical_columns = df.select_dtypes(include=['float64', 'int64']).columns
+    z_scores = stats.zscore(df[numerical_columns])
+    clean_df = df[(z_scores < 2).all(axis=1)]
+    clean_df.drop(columns=['saledate'], inplace=True)
+    normalized_df = df.copy()
+
+    # Numerical columns to be normalized
+    numerical_cols = ['condition', 'odometer', 'mmr']
+
+    # Categorical columns to be encoded
+    categorical_cols = [col for col in df.columns if col not in numerical_cols and col != 'sellingprice']
+
+    # Normalize numerical features using Min-Max Scaling
+    scaler_dict = {}
+    for col in numerical_cols:
+        scaler = MinMaxScaler()
+        normalized_df[col] = scaler.fit_transform(df[[col]])
+        scaler_dict[col] = scaler
+
+    # Encode categorical features using Label Encoding
+    label_encoders = {}
+    for col in categorical_cols:
+        le = LabelEncoder()
+        normalized_df[col] = le.fit_transform(df[col])
+        label_encoders[col] = le
+    path = os.environ['PROJECT_DIR'] + '/transformers'
+    for col_name, encoder in scaler_dict.items():
+        with open(f"{path}/scaler_{col_name}.pkl", 'wb') as f:
+            pickle.dump(encoder, f)
+    for col_name, encoder in label_encoders.items():
+        with open(f"{path}/encoder_{col_name}.pkl", 'wb') as f:
+            pickle.dump(encoder, f)
+    
+def transform(df):
+    df['trim'] = df['trim'].fillna('other')
+    df['color'] = df['color'].fillna('other')
+    df['make'] = df['make'].fillna('other')
+    df['model'] = df['model'].fillna('other')
+
+    df['body'] = df['body'].fillna(df['body'].mode()[0])
+    df['interior'] = df['interior'].fillna(df['interior'].mode()[0])
+    df['transmission'] = df['transmission'].fillna(df['transmission'].mode()[0])
+
+    df.dropna(subset=['vin'], inplace=True)
+    df.dropna(subset=['saledate'], inplace=True)
+    df['condition'] = df['condition'].fillna(df['condition'].median())
+    df['odometer'] = df['odometer'].fillna(df['odometer'].mean())
+    df['mmr'] = df['mmr'].fillna(df['mmr'].mean())
+    numerical_columns = df.select_dtypes(include=['float64', 'int64']).columns
+    z_scores = stats.zscore(df[numerical_columns])
+    clean_df = df[(z_scores < 2).all(axis=1)]
+    clean_df.drop(columns=['saledate'], inplace=True)
+    normalized_df = df.copy()
+
+    # Numerical columns to be normalized
+    numerical_cols = ['condition', 'odometer', 'mmr']
+
+    # Categorical columns to be encoded
+    categorical_cols = [col for col in df.columns if col not in numerical_cols and col != 'sellingprice']
+
+    # Normalize numerical features using Min-Max Scaling
+    scaler_dict = {}
+    path = os.environ['PROJECT_DIR'] + '/transformers'
+    for col in numerical_cols:
+        scaler=None
+        with open(f"{path}/scaler_{col}.pkl", 'rb') as f:
+            scaler = pickle.load(f)
+        normalized_df[col] = scaler.transform(df[[col]])
+        scaler_dict[col] = scaler
+
+    # Encode categorical features using Label Encoding
+    label_encoders = {}
+    for col in categorical_cols:
+        le = None
+        with open(f"{path}/encoder_{col}.pkl", 'rb') as f:
+            le = pickle.load(f)
+        normalized_df[col] = le.transform(df[col])
+        label_encoders[col] = le
+    X, y = normalized_df.drop(['sellingprice', 'vin'],axis=1), normalized_df[['sellingprice']]
+    return X, y
 
 def validate_features(car_prices_dataframe_tuple):
     
     context = gx.get_context()
     ds = context.sources.add_or_update_pandas(name = "transformed_data")
     da = ds.add_dataframe_asset(name = "pandas_dataframe")
-    print(car_prices_dataframe_tuple[0].info())
     batch_request = da.build_batch_request(dataframe = car_prices_dataframe_tuple[0])
     context.add_or_update_expectation_suite('transformed_data_expectation')
     validator = context.get_validator(
@@ -291,18 +384,6 @@ def validate_features(car_prices_dataframe_tuple):
 def load_features(X, y, ver):
     zenml.save_artifact(data = X, name = "features", tags = [ver])
     zenml.save_artifact(data = y, name = "target", tags = [ver])
-
-
-def extract_data(version, cfg):
-    data_path = cfg.data.data_paths[version]
-    df = pd.read_csv(data_path)
-    return df, version
-
-
-def init_hydra():
-    hydra.initialize(config_path="conf")
-    cfg = hydra.compose(config_name="config")
-    return cfg
 
 
 if __name__ == "__main__":

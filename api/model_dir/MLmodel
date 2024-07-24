@@ -1,0 +1,37 @@
+artifact_path: basic_gb_regressor
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.10.14
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.5.1
+mlflow_version: 2.14.3
+model_size_bytes: 829096
+model_uuid: 49d98fb2834d44978e934ca13062a670
+run_id: d09b1ce7c20c4c389239f7ecedcb8da4
+saved_input_example_info:
+  artifact_path: input_example.json
+  format: tf-serving
+  type: ndarray
+signature:
+  inputs: '[{"type": "long", "name": "year", "required": true}, {"type": "long", "name":
+    "make", "required": true}, {"type": "long", "name": "model", "required": true},
+    {"type": "long", "name": "trim", "required": true}, {"type": "long", "name": "body",
+    "required": true}, {"type": "long", "name": "transmission", "required": true},
+    {"type": "long", "name": "state", "required": true}, {"type": "double", "name":
+    "condition", "required": true}, {"type": "double", "name": "odometer", "required":
+    true}, {"type": "long", "name": "color", "required": true}, {"type": "long", "name":
+    "interior", "required": true}, {"type": "long", "name": "seller", "required":
+    true}, {"type": "double", "name": "mmr", "required": true}, {"type": "long", "name":
+    "saledate", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1]}}]'
+  params: null
+utc_time_created: '2024-07-21 18:01:21.770379'

@@ -2,11 +2,11 @@ active_stack_id: d23042ee-2f5d-48cf-95e1-2a87d31f5bfe
 active_workspace_name: default
 analytics_opt_in: true
 store:
-  api_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMDhiNGZjYi1kMmE5LTQ0NmItOTM5OC02YzU5OGEwZDIzMWIiLCJpc3MiOiIyNTMwYzk1OS1jNjkyLTQ3YjctYjM4YS04ZWQxZjExNzdmODkiLCJhdWQiOiIyNTMwYzk1OS1jNjkyLTQ3YjctYjM4YS04ZWQxZjExNzdmODkifQ.O9fkhFg7CF9x3bU3PIOEZi_0jHc72CT-NObafj2FVTc
+  api_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMDhiNGZjYi1kMmE5LTQ0NmItOTM5OC02YzU5OGEwZDIzMWIiLCJpc3MiOiIyNTMwYzk1OS1jNjkyLTQ3YjctYjM4YS04ZWQxZjExNzdmODkiLCJhdWQiOiIyNTMwYzk1OS1jNjkyLTQ3YjctYjM4YS04ZWQxZjExNzdmODkifQ.AueIqvWwO3ru0BoqqLGvmf5dd-W77PN-C5GJqHnSoRs
   http_timeout: 30
   password: ''
   type: rest
-  url: http://127.0.0.1:2718
+  url: http://127.0.0.1:8237
   username: default
   verify_ssl: true
 user_id: 2530c959-c692-47b7-b38a-8ed1f1177f89

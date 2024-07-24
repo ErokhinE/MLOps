@@ -18,3 +18,17 @@ entry_points:
     command: "python pipelines/data_prepare.py"
   extract:
     command: "airflow dags test extract_data"
+  deploy:
+    command: "chmod +x scripts/deploy_docker.sh"
+    command: "scripts/deploy_docker.sh"
+  predict:
+    parameters:
+      data_version: 
+        type: string
+        default: "1"
+      docker_port:
+        type: float
+        default: 5152
+      
+    # src/predict.py is decorated with @hydra.main to pass parameters at runtime
+    command: "python src/predict.py ++data_version={data_version} ++docker_port={docker_port}"

@@ -9,3 +9,8 @@ hydra:
   sweeper:
     params:
       +model: "random_forest, gradient_boosting"
+
+mlflow_port: 5000
+flask_port: 5001
+docker_port: 5152
+web_ui_port: 5155
