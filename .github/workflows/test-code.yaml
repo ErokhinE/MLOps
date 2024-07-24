@@ -56,6 +56,11 @@ jobs:
         run: zenml down && zenml up
         
       - name: Test with pytest
+        env:
+            ZENML_CONFIG_PATH: ${{ env.ZENML_CONFIG_PATH }}
+            PROJECT_DIR: ${{ env.PROJECT_DIR }}
+            AIRFLOW_HOME: ${{ env.AIRFLOW_HOME }}
+            PYTHONPATH: ${{ env.PYTHONPATH }}
         run: pytest tests
       
   print_info:
