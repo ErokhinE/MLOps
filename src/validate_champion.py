@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 import joblib
+from data import preprocess_data
 
 def test_champion_model(name='gradient_boosting_regressor_champion'):
     proj_path = os.environ['PROJECT_DIR']
@@ -15,7 +16,8 @@ def test_champion_model(name='gradient_boosting_regressor_champion'):
             model_type='regression',
             target_name='sellingprice',
         )
-    test_data = load_features('', 2)
+    raw_df = pd.read_csv(f'{proj_path}/data/samples/sample.csv')
+    test_data = preprocess_data(raw_df)
     X, y = test_data
     df = pd.DataFrame(X)
     df['sellingprice'] = y
@@ -30,6 +32,7 @@ def test_champion_model(name='gradient_boosting_regressor_champion'):
     def passed_the_neg_root_mean_squared_error(model, dataset):
             y_true, y_pred = dataset.df[dataset.target], model.predict(dataset).raw
             neg_root_mean_squred_error = -np.sqrt(mean_squared_error(y_true, y_pred))
+            print(neg_root_mean_squred_error)
             return giskard.TestResult(passed=neg_root_mean_squred_error>=success_threshold)
     test_suite.add_test(passed_the_neg_root_mean_squared_error, model=giskard_model, dataset=giskard_dataset, test_id='neg_root_mean_squared_error')
     result = test_suite.run()
