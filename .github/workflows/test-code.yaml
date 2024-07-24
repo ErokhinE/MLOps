@@ -57,10 +57,10 @@ jobs:
         
       - name: Test with pytest
         env:
-            ZENML_CONFIG_PATH: ${{ env.ZENML_CONFIG_PATH }}
-            PROJECT_DIR: ${{ env.PROJECT_DIR }}
-            AIRFLOW_HOME: ${{ env.AIRFLOW_HOME }}
-            PYTHONPATH: ${{ env.PYTHONPATH }}
+            ZENML_CONFIG_PATH: $PWD/services/zenml
+            PROJECT_DIR: $PWD
+            AIRFLOW_HOME: $PWD/services/airflow
+            PYTHONPATH: $PWD/src
         run: pytest tests
       
   print_info:
