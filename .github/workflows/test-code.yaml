@@ -39,7 +39,7 @@ jobs:
       - name: install python packages
         run: |
           python3.10 -m pip install --upgrade pip 
-          pip3.10 install -r installed_requirements.txt 
+          pip3.10 install -r requirements.txt 
         
       - name: Run your app
         run: python3.10 src/app.py &
