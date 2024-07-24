@@ -56,12 +56,12 @@ jobs:
         run: zenml down && zenml up
         
       - name: Test with pytest
-        env:
-            ZENML_CONFIG_PATH: $PWD/services/zenml
-            PROJECT_DIR: $PWD
-            AIRFLOW_HOME: $PWD/services/airflow
-            PYTHONPATH: $PWD/src
-        run: pytest tests
+        run: |
+          echo "ZENML_CONFIG_PATH=${{ env.ZENML_CONFIG_PATH }}"
+          echo "PROJECT_DIR=${{ env.PROJECT_DIR }}"
+          echo "AIRFLOW_HOME=${{ env.AIRFLOW_HOME }}"
+          echo "PYTHONPATH=${{ env.PYTHONPATH }}"
+          pytest tests
       
   print_info:
     runs-on: ubuntu-latest
