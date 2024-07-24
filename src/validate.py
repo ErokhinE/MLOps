@@ -3,11 +3,12 @@ from model import load_features, retrieve_model_with_alias
 from sklearn.metrics import mean_squared_error
 import os
 from mlflow.tracking import MlflowClient
-client = MlflowClient()
 import numpy as np
 import pandas as pd
 
+
 def choose_best_model():
+    client = MlflowClient()
     challenger_models = []
     for model_type in ['random_forest_regressor', 'gradient_boosting_regressor']:
         for alias in ['challenger1', 'challenger2']:
@@ -32,7 +33,7 @@ def choose_best_model():
         )
         giskard_models.append((model,model_info[2], model_info[1]))
         
-    success_threshold = -1600.0  # Example threshold for F1 score
+    success_threshold = -1600.0
 
     results = []
     # Create test suite and add performance test

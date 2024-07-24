@@ -1,0 +1,48 @@
+name: Example testing
+
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule: # Run this workflow on a scheduled manner given the cron expression (This is a second event to trigger the workflow)
+    - cron: '*/5 * * * *'
+
+permissions:
+  contents: read
+
+env:
+  message: "Validating champion"
+
+jobs:
+  validate-champion:
+    runs-on: ubuntu-latest # The ubuntu-latest label currently uses the Ubuntu 22.04 runner image
+    
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
+
+    steps:
+      - name: Checking out our code
+        uses: actions/checkout@v4
+        
+      - name: setup python
+        uses: actions/setup-python@v5
+        
+        with:
+          python-version: '3.10.14'
+          cache: 'pip'
+          
+      - name: install python packages
+        run: |
+          python3.10 -m pip install --upgrade pip 
+          pip3.10 install -r requirements.txt 
+        
+      - name: validation
+        run: |
+          echo $PWD
+          export PROJECT_DIR=$PWD >> $GITHUB_ENV
+          python3.10 src/validate_champion.py
