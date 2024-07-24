@@ -57,10 +57,11 @@ jobs:
         
       - name: Test with pytest
         run: |
-          echo "ZENML_CONFIG_PATH=${{ env.ZENML_CONFIG_PATH }}"
-          echo "PROJECT_DIR=${{ env.PROJECT_DIR }}"
-          echo "AIRFLOW_HOME=${{ env.AIRFLOW_HOME }}"
-          echo "PYTHONPATH=${{ env.PYTHONPATH }}"
+          echo $PWD
+          export ZENML_CONFIG_PATH=$PWD/services/zenml
+          export PROJECT_DIR=$PWD >> $GITHUB_ENV
+          export AIRFLOW_HOME=$PWD/services/airflow
+          export PYTHONPATH=$PWD/src
           pytest tests
       
   print_info:
