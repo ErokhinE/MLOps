@@ -8,6 +8,9 @@ import pandas as pd
 
 
 def choose_best_model():
+    """
+    Choosing the best model
+    """
     client = MlflowClient()
     challenger_models = []
     for model_type in ['random_forest_regressor', 'gradient_boosting_regressor']:

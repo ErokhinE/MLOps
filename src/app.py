@@ -9,6 +9,7 @@ import pandas as pd
 from omegaconf import DictConfig
 from hydra import initialize, compose
 from data import transform
+import os
 def make_config():
     with initialize(config_path="../configs", version_base=None):
         cfg: DictConfig = compose(config_name='main')
@@ -111,10 +112,10 @@ demo = gr.Interface(
     ],
     
     # The outputs here will get the returned value from `predict` function
-    outputs = gr.Text(label="prediction result"),
+    outputs = gr.Text(label="predicted selling price"),
     
     # This will provide the user with examples to test the API
-    # examples="data/examples"
+    examples=f"{os.environ['PROJECT_DIR']}/gradio/data/examples"
     # data/examples is a folder contains a file `log.csv` 
     # which contains data samples as examples to enter by user 
     # when needed. 

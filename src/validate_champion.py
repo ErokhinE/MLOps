@@ -8,6 +8,9 @@ import joblib
 from data import preprocess_data
 
 def test_champion_model(name='gradient_boosting_regressor_champion'):
+    """
+    Validates that champion performs well on sample dataset
+    """
     proj_path = os.environ['PROJECT_DIR']
     model = joblib.load(open(f'{proj_path}/models/{name}.joblib', 'rb')) 
     giskard_model = giskard.Model(

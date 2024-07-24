@@ -43,6 +43,9 @@ def sample_data():
 
 
 def validate_initial_data():
+    """
+    Validates initial data and returns true if everything is fine
+    """
     dir_path = os.environ['PROJECT_DIR']
     context = FileDataContext(project_root_dir='services')
     sample_source = context.sources.add_or_update_pandas('data_sample')
@@ -141,6 +144,9 @@ def validate_initial_data():
 
 
 def read_datastore() -> tuple[pd.DataFrame, str]:
+    """
+    Reads the datastore and return tuple (df, version)
+    """
     initialize(config_path="../configs", version_base="1.1")
     cfg = compose(config_name="config")
     version_num = cfg.data.data_version
@@ -153,6 +159,11 @@ def read_datastore() -> tuple[pd.DataFrame, str]:
 
 
 def preprocess_data(df):
+    """
+    Preprocesses the data
+    @param df dataframe
+    @return (X, y)
+    """
     df['trim'] = df['trim'].fillna('other')
     df['color'] = df['color'].fillna('other')
     df['make'] = df['make'].fillna('other')
@@ -197,6 +208,9 @@ def preprocess_data(df):
 
 
 def fit_transformers(df):
+    """
+    Fits and save transformers for gradio so that user can input raw data
+    """
     df['trim'] = df['trim'].fillna('other')
     df['color'] = df['color'].fillna('other')
     df['make'] = df['make'].fillna('other')
@@ -243,6 +257,9 @@ def fit_transformers(df):
             pickle.dump(encoder, f)
     
 def transform(df):
+    """
+    Transforms the dataframe to use fitted transformers
+    """
     df['trim'] = df['trim'].fillna('other')
     df['color'] = df['color'].fillna('other')
     df['make'] = df['make'].fillna('other')
@@ -291,7 +308,9 @@ def transform(df):
     return X, y
 
 def validate_features(car_prices_dataframe_tuple):
-    
+    """
+    Validates features
+    """
     context = gx.get_context()
     ds = context.sources.add_or_update_pandas(name = "transformed_data")
     da = ds.add_dataframe_asset(name = "pandas_dataframe")
