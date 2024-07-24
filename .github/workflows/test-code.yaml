@@ -48,7 +48,7 @@ jobs:
         run: | 
           echo $PWD
           export ZENML_CONFIG_PATH=$PWD/services/zenml
-          export PROJECT_DIR=$PWD
+          export PROJECT_DIR=$PWD >> $GITHUB_ENV
           export AIRFLOW_HOME=$PWD/services/airflow
           export PYTHONPATH=$PWD/src
 
